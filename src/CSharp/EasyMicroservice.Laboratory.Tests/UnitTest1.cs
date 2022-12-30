@@ -1,3 +1,5 @@
+using Xunit;
+
 namespace EasyMicroservice.Laboratory.Tests
 {
     public class UnitTest1
