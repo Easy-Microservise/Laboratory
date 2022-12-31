@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.1;net6.0</TargetFrameworks>
+    <Platforms>AnyCPU;x64;x86</Platforms>
+    <Authors>Ali Yousefi Telori, Mahdi Delzende</Authors>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>0.0.0.1</Version>
+    <Description>Laboratory of http client.</Description>
+    <Copyright>EasyMicroservice@gmail.com</Copyright>
+    <PackageTags>test,tests,http,https,httpclient,laboratory</PackageTags>
+    <PackageProjectUrl>https://github.com/Easy-Microservise/Laboratory</PackageProjectUrl>
+    <LangVersion>latest</LangVersion>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <DocumentationFile>.\bin\$(Configuration)\$(TargetFramework)\EasyMicroservice.Laboratory.xml</DocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="DataTypes\" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="EasyMicroservices.Utilities" Version="0.0.0.1" />
+  </ItemGroup>
+</Project>
