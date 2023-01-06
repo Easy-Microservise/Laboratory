@@ -5,7 +5,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EasyMicroservice.Laboratory.Engine.Net.Http
+namespace EasyMicroservices.Laboratory.Engine.Net.Http
 {
     /// <summary>
     /// Http protocol handler of Laboratory
@@ -37,7 +37,7 @@ namespace EasyMicroservice.Laboratory.Engine.Net.Http
                 var line = await ReadLineAsync(stream);
                 if (string.IsNullOrEmpty(line))
                     break;
-                var headerValue = line.SplitCount(':', 1);
+                var headerValue = line.Split(new char[] { ':' }, 2);
                 headers.TryAddItem(headerValue[0], headerValue[1]);
             }
             int contentLength = 0;

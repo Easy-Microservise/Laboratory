@@ -1,10 +1,8 @@
-﻿using EasyMicroservice.Laboratory.Constants;
-using EasyMicroservice.Laboratory.Models;
-using System.Collections.Generic;
+﻿using EasyMicroservices.Laboratory.Models;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace EasyMicroservice.Laboratory.Engine
+namespace EasyMicroservices.Laboratory.Engine
 {
     /// <summary>
     /// Handle the requests

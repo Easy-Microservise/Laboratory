@@ -1,5 +1,5 @@
-﻿using EasyMicroservice.Laboratory.Engine;
-using EasyMicroservice.Laboratory.Engine.Net.Http;
+﻿using EasyMicroservices.Laboratory.Engine;
+using EasyMicroservices.Laboratory.Engine.Net.Http;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Xunit;

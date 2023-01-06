@@ -7,7 +7,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EasyMicroservice.Laboratory.Engine.Net
+namespace EasyMicroservices.Laboratory.Engine.Net
 {
     /// <summary>
     /// Handle the Tcp services
