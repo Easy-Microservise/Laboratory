@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EasyMicroservices.Laboratory.Constants;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -154,6 +155,65 @@ namespace EasyMicroservices.Laboratory.Engine.Net
             }
             while (index < length);
             return result;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="firstLine"></param>
+        /// <param name="requestHeaders"></param>
+        /// <param name="requestBody"></param>
+        /// <param name="stream"></param>
+        /// <returns></returns>
+        public async Task WriteResponseAsync(string firstLine, Dictionary<string, string> requestHeaders, string requestBody, Stream stream)
+        {
+            string responseBody = "No response found!";
+            if (requestHeaders.TryGetValue(RequestTypeHeaderConstants.RequestTypeHeader, out string headerTypeValue))
+            {
+                switch (headerTypeValue)
+                {
+                    case RequestTypeHeaderConstants.GiveMeFullRequestHeaderValue:
+                        {
+                            responseBody = GetGiveMeFullRequestHeaderValueResponse(firstLine, requestHeaders, requestBody);
+                            break;
+                        }
+                }
+            }
+            else
+                responseBody = await _requestHandler.FindResponseBody(requestBody);
+            var responseBodyBytes = Encoding.UTF8.GetBytes(responseBody);
+            await stream.WriteAsync(responseBodyBytes, 0, responseBodyBytes.Length);
+        }
+
+        string GetGiveMeFullRequestHeaderValueResponse(string firstLine, Dictionary<string, string> requestHeaders, string requestBody)
+        {
+            StringBuilder responseBuilder = new();
+            StringBuilder bodyBuilder = new();
+            responseBuilder.AppendLine(DefaultResponse());
+            bodyBuilder.AppendLine(firstLine);
+            foreach (var header in requestHeaders.Where(x => !x.Key.Equals(RequestTypeHeaderConstants.RequestTypeHeader, StringComparison.OrdinalIgnoreCase)))
+            {
+                bodyBuilder.Append(header.Key);
+                bodyBuilder.Append(": ");
+                bodyBuilder.AppendLine(header.Value);
+            }
+            bodyBuilder.AppendLine();
+            bodyBuilder.Append(requestBody);
+
+            responseBuilder.AppendLine($"Content-Length: {bodyBuilder.Length}");
+            responseBuilder.AppendLine();
+            responseBuilder.Append(bodyBuilder);
+
+            return responseBuilder.ToString();
+        }
+
+        string DefaultResponse()
+        {
+            return @$"HTTP/1.1 200 OK
+Cache-Control: no-cache
+Pragma: no-cache
+Content-Type: text/plain; charset=utf-8
+Vary: Accept-Encoding";
         }
     }
 }
