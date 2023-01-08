@@ -13,5 +13,9 @@
         /// It gives you the complete request data for the response
         /// </summary>
         public const string GiveMeFullRequestHeaderValue = "Full-Request";
+        /// <summary>
+        /// It gives you the complete last requested data for the response
+        /// </summary>
+        public const string GiveMeLastFullRequestHeaderValue = "Last-Full-Request";
     }
 }

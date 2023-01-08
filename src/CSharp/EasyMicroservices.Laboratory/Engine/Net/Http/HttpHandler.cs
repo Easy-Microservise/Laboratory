@@ -30,7 +30,9 @@ namespace EasyMicroservices.Laboratory.Engine.Net.Http
         {
             using var stream = tcpClient.GetStream();
             string firstLine = await ReadLineAsync(stream);
+            StringBuilder fullBody = new StringBuilder();
             Dictionary<string, string> headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            fullBody.AppendLine(firstLine);
             //read headers
             while (true)
             {
@@ -39,6 +41,7 @@ namespace EasyMicroservices.Laboratory.Engine.Net.Http
                     break;
                 var headerValue = line.Split(new char[] { ':' }, 2);
                 headers.TryAddItem(headerValue[0], headerValue[1].Trim());
+                fullBody.AppendLine(line);
             }
             int contentLength = 0;
             if (headers.TryGetValue(HttpHeadersConstants.ContentLength, out string contentLengthValue))
@@ -46,9 +49,14 @@ namespace EasyMicroservices.Laboratory.Engine.Net.Http
                 contentLength = int.Parse(contentLengthValue);
             }
 
-            var buffer = await ReadBlockAsync(stream, contentLength);
-            var requestBody = Encoding.UTF8.GetString(buffer);
-            await WriteResponseAsync(firstLine, headers, requestBody, stream);
+            string requestBody = "";
+            if (contentLength > 0)
+            {
+                var buffer = await ReadBlockAsync(stream, contentLength);
+                requestBody = Encoding.UTF8.GetString(buffer);
+                fullBody.Append(requestBody);
+            }
+            await WriteResponseAsync(firstLine, headers, requestBody, fullBody, stream);
         }
     }
 }

@@ -28,7 +28,7 @@ namespace EasyMicroservices.Laboratory.Engine
         {
             var spaceDetail = FindSpace(requestBody);
             //var extractedSpace = SpaceDetail.GetSpaceDetail(requestBody, spaceDetail);
-            return await spaceDetail.GetResponse();
+            return spaceDetail == null ? null : await spaceDetail.GetResponse();
         }
 
         SpaceDetail FindSpace(string requestBody)

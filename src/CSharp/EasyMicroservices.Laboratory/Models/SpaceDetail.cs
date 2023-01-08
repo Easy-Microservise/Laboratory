@@ -37,7 +37,7 @@ namespace EasyMicroservices.Laboratory.Models
             int startFrom = 0;
             foreach (var space in RequestSpaces)
             {
-                if (space is NormalTextSpace)
+                if (space is NormalTextSpace && space is not SkipBodySpace)
                 {
                     var index = request.IndexOf(space.Text, startFrom);
                     if (index < 0)
@@ -58,7 +58,7 @@ namespace EasyMicroservices.Laboratory.Models
             SpaceDetail result = new SpaceDetail();
             result.RequestSpaces.AddRange(LoadRequests(requestBody));
             result.ResponseSpaces.AddRange(LoadResponses(responseBody));
-            result.Hash = result.RequestSpaces.Select(x => x.Text).ToArray().GetSHA1Hash();
+            result.Hash = result.RequestSpaces.Where(x => x.Text != null).Select(x => x.Text).ToArray().GetSHA1Hash();
             return result;
         }
 
@@ -135,11 +135,15 @@ namespace EasyMicroservices.Laboratory.Models
             using var memory = new MemoryStream(Encoding.UTF8.GetBytes(response));
             using var reader = new StreamReader(memory, Encoding.UTF8);
             string line;
+            bool hasBody = false;
             do
             {
                 line = await reader.ReadLineAsync();
-                if (line == "")
+                if (line != null && line.StartsWith("Content-Length:", System.StringComparison.OrdinalIgnoreCase))
+                    continue;
+                else if (line == "")
                 {
+                    hasBody = true;
                     var body = await reader.ReadToEndAsync();
                     stringBuilder.AppendLine($"Content-Length: {body.Length}");
                     stringBuilder.AppendLine("");
@@ -150,6 +154,11 @@ namespace EasyMicroservices.Laboratory.Models
                     stringBuilder.AppendLine(line);
             }
             while (line != null);
+            if (!hasBody)
+            {
+                stringBuilder.AppendLine($"Content-Length: 0");
+                stringBuilder.AppendLine("");
+            }
             return stringBuilder.ToString();
         }
     }
