@@ -1,5 +1,5 @@
-﻿using EasyMicroservice.Laboratory.Constants;
-using EasyMicroservice.Laboratory.Models.Spaces;
+﻿using EasyMicroservices.Laboratory.Constants;
+using EasyMicroservices.Laboratory.Models.Spaces;
 using EasyMicroservices.Utilities.Text;
 using System.Collections.Generic;
 using System.IO;
@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EasyMicroservice.Laboratory.Models
+namespace EasyMicroservices.Laboratory.Models
 {
     /// <summary>
     /// details of space
@@ -58,13 +58,13 @@ namespace EasyMicroservice.Laboratory.Models
             SpaceDetail result = new SpaceDetail();
             result.RequestSpaces.AddRange(LoadRequests(requestBody));
             result.ResponseSpaces.AddRange(LoadResponses(responseBody));
-            result.Hash = HashHelper.GetSHA1Hash(result.RequestSpaces.Select(x => x.Text).ToArray());
+            result.Hash = result.RequestSpaces.Select(x => x.Text).ToArray().GetSHA1Hash();
             return result;
         }
 
         static IEnumerable<NormalTextSpace> LoadRequests(string requestBody)
         {
-            var skipBodies = requestBody.Split(RequestConstants.SkipBody);
+            var skipBodies = requestBody.Split(new string[] { RequestConstants.SkipBody }, System.StringSplitOptions.None);
             if (skipBodies.Length > 1)
             {
                 for (int i = 0; i < skipBodies.Length; i++)

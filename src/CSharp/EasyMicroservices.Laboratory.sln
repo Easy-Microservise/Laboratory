@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.33110.190
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasyMicroservice.Laboratory", "EasyMicroservice.Laboratory\EasyMicroservice.Laboratory.csproj", "{A3E24DCE-19B0-4766-A911-21F39D8E408A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasyMicroservices.Laboratory", "EasyMicroservices.Laboratory\EasyMicroservices.Laboratory.csproj", "{A3E24DCE-19B0-4766-A911-21F39D8E408A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "App", "App", "{47D63FDA-51DF-4994-8C0D-08EC5AAC4215}"
 EndProject
@@ -11,7 +11,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Application-Layer", "Applic
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test-Layer", "Test-Layer", "{2E55F688-97F7-4C1D-A9D6-9BB3737CEBBE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasyMicroservice.Laboratory.Tests", "EasyMicroservice.Laboratory.Tests\EasyMicroservice.Laboratory.Tests.csproj", "{A9DB8731-2AE1-4C07-99A4-2E03A2AF495F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasyMicroservices.Laboratory.Tests", "EasyMicroservices.Laboratory.Tests\EasyMicroservices.Laboratory.Tests.csproj", "{A9DB8731-2AE1-4C07-99A4-2E03A2AF495F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -5,7 +5,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EasyMicroservice.Laboratory.Engine.Net.Http
+namespace EasyMicroservices.Laboratory.Engine.Net.Http
 {
     /// <summary>
     /// Http protocol handler of Laboratory
@@ -37,8 +37,8 @@ namespace EasyMicroservice.Laboratory.Engine.Net.Http
                 var line = await ReadLineAsync(stream);
                 if (string.IsNullOrEmpty(line))
                     break;
-                var headerValue = line.SplitCount(':', 1);
-                headers.TryAddItem(headerValue[0], headerValue[1]);
+                var headerValue = line.Split(new char[] { ':' }, 2);
+                headers.TryAddItem(headerValue[0], headerValue[1].Trim());
             }
             int contentLength = 0;
             if (headers.TryGetValue(HttpHeadersConstants.ContentLength, out string contentLengthValue))
@@ -48,9 +48,7 @@ namespace EasyMicroservice.Laboratory.Engine.Net.Http
 
             var buffer = await ReadBlockAsync(stream, contentLength);
             var requestBody = Encoding.UTF8.GetString(buffer);
-            var responseBody = await _requestHandler.FindResponseBody(requestBody);
-            var responseBodyBytes = Encoding.UTF8.GetBytes(responseBody);
-            await stream.WriteAsync(responseBodyBytes, 0, responseBodyBytes.Length);
+            await WriteResponseAsync(firstLine, headers, requestBody, stream);
         }
     }
 }

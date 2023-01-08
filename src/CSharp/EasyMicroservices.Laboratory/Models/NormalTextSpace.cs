@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace EasyMicroservice.Laboratory.Models
+﻿namespace EasyMicroservices.Laboratory.Models
 {
     /// <summary>
     /// it's normal constant text of body
