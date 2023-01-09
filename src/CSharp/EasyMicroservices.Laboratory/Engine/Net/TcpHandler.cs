@@ -157,17 +157,19 @@ namespace EasyMicroservices.Laboratory.Engine.Net
             return result;
         }
 
+        static string _lastResponseBody = "";
         /// <summary>
         /// 
         /// </summary>
         /// <param name="firstLine"></param>
         /// <param name="requestHeaders"></param>
         /// <param name="requestBody"></param>
+        /// <param name="fullBody"></param>
         /// <param name="stream"></param>
         /// <returns></returns>
-        public async Task WriteResponseAsync(string firstLine, Dictionary<string, string> requestHeaders, string requestBody, Stream stream)
+        public async Task WriteResponseAsync(string firstLine, Dictionary<string, string> requestHeaders, string requestBody,StringBuilder fullBody, Stream stream)
         {
-            string responseBody = "No response found!";
+            string responseBody = "";
             if (requestHeaders.TryGetValue(RequestTypeHeaderConstants.RequestTypeHeader, out string headerTypeValue))
             {
                 switch (headerTypeValue)
@@ -177,10 +179,18 @@ namespace EasyMicroservices.Laboratory.Engine.Net
                             responseBody = GetGiveMeFullRequestHeaderValueResponse(firstLine, requestHeaders, requestBody);
                             break;
                         }
+                    case RequestTypeHeaderConstants.GiveMeLastFullRequestHeaderValue:
+                        {
+                            responseBody = _lastResponseBody;
+                            break;
+                        }
                 }
             }
             else
-                responseBody = await _requestHandler.FindResponseBody(requestBody);
+                responseBody = await _requestHandler.FindResponseBody(fullBody.ToString());
+            if (string.IsNullOrEmpty(responseBody))
+                responseBody = GetNoResponse(firstLine, requestHeaders, requestBody);
+            _lastResponseBody = responseBody;
             var responseBodyBytes = Encoding.UTF8.GetBytes(responseBody);
             await stream.WriteAsync(responseBodyBytes, 0, responseBodyBytes.Length);
         }
@@ -214,6 +224,46 @@ Cache-Control: no-cache
 Pragma: no-cache
 Content-Type: text/plain; charset=utf-8
 Vary: Accept-Encoding";
+        }
+
+        string GetNoResponse(string firstLine, Dictionary<string, string> requestHeaders, string requestBody)
+        {
+            StringBuilder stringBuilder = new StringBuilder();
+            StringBuilder bodyBuilder = new();
+            bodyBuilder.AppendLine(firstLine);
+            foreach (var header in requestHeaders)
+            {
+                bodyBuilder.Append(header.Key);
+                bodyBuilder.Append(": ");
+                bodyBuilder.AppendLine(header.Value);
+            }
+            bodyBuilder.AppendLine();
+            bodyBuilder.Append(requestBody);
+            var defaultResponse = @$"HTTP/1.1 405 OK
+Cache-Control: no-cache
+Pragma: no-cache
+Content-Type: text/plain; charset=utf-8
+Vary: Accept-Encoding";
+            stringBuilder.AppendLine(defaultResponse);
+            stringBuilder.AppendLine($"Content-Length: {bodyBuilder.Length}");
+            stringBuilder.AppendLine();
+            stringBuilder.Append(bodyBuilder);
+            return stringBuilder.ToString();
+        }
+
+        string MergeRequest(string firstLine, Dictionary<string, string> requestHeaders, string requestBody)
+        {
+            StringBuilder bodyBuilder = new();
+            bodyBuilder.AppendLine(firstLine);
+            foreach (var header in requestHeaders)
+            {
+                bodyBuilder.Append(header.Key);
+                bodyBuilder.Append(": ");
+                bodyBuilder.AppendLine(header.Value);
+            }
+            bodyBuilder.AppendLine();
+            bodyBuilder.Append(requestBody);
+            return bodyBuilder.ToString();
         }
     }
 }

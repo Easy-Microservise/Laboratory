@@ -27,20 +27,85 @@ namespace EasyMicroservice.Laboratory.Tests.Engine.Net.Http
         }
 
         [Theory]
-        [InlineData("Hello Ali \r\n Hi Mahdi", "POST / HTTP/1.1\r\nHost: localhost:2042\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Length: 21\r\n\r\nHello Ali \r\n Hi Mahdi")]
+        [InlineData("Hello Ali \r\n Hi Mahdi", $"POST / HTTP/1.1\r\nHost: localhost:*MyPort*\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Length: 21\r\n\r\nHello Ali \r\n Hi Mahdi")]
         public async Task CheckSimpleRequestToGiveMeFullRequestHeaderValue(string request, string response)
         {
             ResourceManager resourceManager = new ResourceManager();
-            resourceManager.Append(request, GetHttpResponseHeaders(response));
             HttpHandler httpHandler = new HttpHandler(resourceManager);
             var port = await httpHandler.Start();
-
+            response = response.Replace("*MyPort*", port.ToString());
             HttpClient httpClient = new HttpClient();
             httpClient.DefaultRequestHeaders.Add(RequestTypeHeaderConstants.RequestTypeHeader, RequestTypeHeaderConstants.GiveMeFullRequestHeaderValue);
             var data = new StringContent(request);
             var httpResponse = await httpClient.PostAsync($"http://localhost:{port}", data);
             var textResponse = await httpResponse.Content.ReadAsStringAsync();
             Assert.Equal(textResponse, response);
+        }
+
+        [Theory]
+        [InlineData("Hello Ali \r\n Hi Mahdi", $"POST / HTTP/1.1\r\nHost: localhost:*MyPort*\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Length: 21\r\n\r\nHello Ali \r\n Hi Mahdi")]
+        public async Task CheckSimpleRequestToGiveMeLastFullRequestHeaderValue(string request, string response)
+        {
+            ResourceManager resourceManager = new ResourceManager();
+            HttpHandler httpHandler = new HttpHandler(resourceManager);
+            var port = await httpHandler.Start();
+            response = response.Replace("*MyPort*", port.ToString());
+            HttpClient httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Add(RequestTypeHeaderConstants.RequestTypeHeader, RequestTypeHeaderConstants.GiveMeFullRequestHeaderValue);
+            var data = new StringContent(request);
+            var httpResponse = await httpClient.PostAsync($"http://localhost:{port}", data);
+            var textResponse = await httpResponse.Content.ReadAsStringAsync();
+
+            httpClient.DefaultRequestHeaders.Clear();
+            httpClient.DefaultRequestHeaders.Add(RequestTypeHeaderConstants.RequestTypeHeader, RequestTypeHeaderConstants.GiveMeLastFullRequestHeaderValue);
+            httpResponse = await httpClient.GetAsync($"http://localhost:{port}");
+            textResponse = await httpResponse.Content.ReadAsStringAsync();
+
+            Assert.Equal(textResponse, response);
+        }
+
+        [Theory]
+        [InlineData(@"PUT*RequestSkipBody*HTTP/1.1
+Expect: *RequestSkipBody*
+x-amz-meta-title: *RequestSkipBody*
+User-Agent: *RequestSkipBody*
+amz-sdk-invocation-id: *RequestSkipBody*
+amz-sdk-request: *RequestSkipBody*
+Host: *RequestSkipBody*
+X-Amz-Date: *RequestSkipBody*
+X-Amz-Content-SHA256: *RequestSkipBody*
+Authorization: *RequestSkipBody*
+Content-Length: *RequestSkipBody*"
+,
+@"HTTP/1.1 200 OK
+x-amz-id-2: Ali/Reza/Javad
+x-amz-request-id: id
+Date: Sat, 07 Jan 2023 16:24:56 GMT
+x-amz-version-id: AmazonVersion
+ETag: ""ETag""
+Server: AmazonS3
+Content-Length: 0
+
+Ali", "Ali")]
+        public async Task CheckComplex(string request, string response, string simpleResponse)
+        {
+            ResourceManager resourceManager = new ResourceManager();
+            resourceManager.Append(request, response);
+            HttpHandler httpHandler = new HttpHandler(resourceManager);
+            var port = await httpHandler.Start();
+            HttpClient httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Add("Expect", "100-continue");
+            httpClient.DefaultRequestHeaders.Add("x-amz-meta-title", "someTitle");
+            httpClient.DefaultRequestHeaders.Add("User-Agent", "aws-sdk-dotnet-coreclr/3.7.101.44 aws-sdk-dotnet-core/3.7.103.6 .NET_Core/6.0.11 OS/Microsoft_Windows_10.0.22000 ClientAsync");
+            httpClient.DefaultRequestHeaders.Add("amz-sdk-invocation-id", "guid");
+            httpClient.DefaultRequestHeaders.Add("amz-sdk-request", "attempt=1; max=5");
+            httpClient.DefaultRequestHeaders.Add("Host", "s3.eu-west-1.amazonaws.com");
+            httpClient.DefaultRequestHeaders.Add("X-Amz-Date", "20230107T162454Z");
+            httpClient.DefaultRequestHeaders.Add("X-Amz-Content-SHA256", "sha256");
+            httpClient.DefaultRequestHeaders.Add("Authorization", "empty");
+            var httpResponse = await httpClient.PutAsync($"http://localhost:{port}", null);
+            var textResponse = await httpResponse.Content.ReadAsStringAsync();
+            Assert.Equal(textResponse, simpleResponse);
         }
     }
 }
