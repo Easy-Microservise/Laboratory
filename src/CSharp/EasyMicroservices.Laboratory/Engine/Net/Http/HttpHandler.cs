@@ -54,6 +54,7 @@ namespace EasyMicroservices.Laboratory.Engine.Net.Http
             {
                 var buffer = await ReadBlockAsync(stream, contentLength);
                 requestBody = Encoding.UTF8.GetString(buffer);
+                fullBody.AppendLine();
                 fullBody.Append(requestBody);
             }
             await WriteResponseAsync(firstLine, headers, requestBody, fullBody, stream);
