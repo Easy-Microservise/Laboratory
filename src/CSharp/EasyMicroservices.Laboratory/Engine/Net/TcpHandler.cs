@@ -167,7 +167,7 @@ namespace EasyMicroservices.Laboratory.Engine.Net
         /// <param name="fullBody"></param>
         /// <param name="stream"></param>
         /// <returns></returns>
-        public async Task WriteResponseAsync(string firstLine, Dictionary<string, string> requestHeaders, string requestBody,StringBuilder fullBody, Stream stream)
+        public async Task WriteResponseAsync(string firstLine, Dictionary<string, string> requestHeaders, string requestBody, StringBuilder fullBody, Stream stream)
         {
             string responseBody = "";
             if (requestHeaders.TryGetValue(RequestTypeHeaderConstants.RequestTypeHeader, out string headerTypeValue))
