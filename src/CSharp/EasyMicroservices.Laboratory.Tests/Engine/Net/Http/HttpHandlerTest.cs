@@ -13,7 +13,7 @@ namespace EasyMicroservice.Laboratory.Tests.Engine.Net.Http
         {
 #if (!NET452 && !NET48)
             if (!System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
-                return text.Replace("\r\n", "\n").Replace("Content-Length: 21", "Content-Length: 20") ;
+                return text.Replace("\r\n", "\n").Replace("Content-Length: 21", "Content-Length: 20");
 #endif
             return text;
         }
