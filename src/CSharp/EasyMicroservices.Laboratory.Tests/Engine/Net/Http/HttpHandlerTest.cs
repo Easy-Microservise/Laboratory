@@ -2,6 +2,7 @@
 using EasyMicroservices.Laboratory.Engine;
 using EasyMicroservices.Laboratory.Engine.Net.Http;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -9,12 +10,20 @@ namespace EasyMicroservice.Laboratory.Tests.Engine.Net.Http
 {
     public class HttpHandlerTest : BaseHandler
     {
+        string NormalizeOSText(string text)
+        {
+           if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                return text.Replace("\r\n", "\n");
+            return text;
+        }
         [Theory]
-        [InlineData("Hello Ali \r\n Hi Mahdi", "Reza")]
+        [InlineData($"Hello Ali \r\n Hi Mahdi", "Reza")]
         [InlineData("Hello Ali", "Reza \n")]
         [InlineData("Hello Mahdi", "Body \r\n Body2")]
         public async Task CheckSimpleRequestAndResponse(string request, string response)
         {
+            request = NormalizeOSText(request);
+            response = NormalizeOSText(response);
             ResourceManager resourceManager = new ResourceManager();
             resourceManager.Append(request, GetHttpResponseHeaders(response));
             HttpHandler httpHandler = new HttpHandler(resourceManager);
@@ -30,6 +39,8 @@ namespace EasyMicroservice.Laboratory.Tests.Engine.Net.Http
         [InlineData("Hello Ali \r\n Hi Mahdi", $"POST / HTTP/1.1\r\nHost: localhost:*MyPort*\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Length: 21\r\n\r\nHello Ali \r\n Hi Mahdi")]
         public async Task CheckSimpleRequestToGiveMeFullRequestHeaderValue(string request, string response)
         {
+            request = NormalizeOSText(request);
+            response = NormalizeOSText(response);
             ResourceManager resourceManager = new ResourceManager();
             HttpHandler httpHandler = new HttpHandler(resourceManager);
             var port = await httpHandler.Start();
@@ -49,6 +60,8 @@ namespace EasyMicroservice.Laboratory.Tests.Engine.Net.Http
         [InlineData("Hello Ali \r\n Hi Mahdi", $"POST / HTTP/1.1\r\nHost: localhost:*MyPort*\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Length: 21\r\n\r\nHello Ali \r\n Hi Mahdi")]
         public async Task CheckSimpleRequestToGiveMeLastFullRequestHeaderValue(string request, string response)
         {
+            request = NormalizeOSText(request);
+            response = NormalizeOSText(response);
             ResourceManager resourceManager = new ResourceManager();
             HttpHandler httpHandler = new HttpHandler(resourceManager);
             var port = await httpHandler.Start();
@@ -93,6 +106,8 @@ Content-Length: 0
 Ali", "Ali")]
         public async Task CheckComplex(string request, string response, string simpleResponse)
         {
+            request = NormalizeOSText(request);
+            response = NormalizeOSText(response);
             ResourceManager resourceManager = new ResourceManager();
             resourceManager.Append(request, response);
             HttpHandler httpHandler = new HttpHandler(resourceManager);
