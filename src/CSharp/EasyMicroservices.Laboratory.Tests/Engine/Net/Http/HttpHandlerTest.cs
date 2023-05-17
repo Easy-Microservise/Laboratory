@@ -2,7 +2,6 @@
 using EasyMicroservices.Laboratory.Engine;
 using EasyMicroservices.Laboratory.Engine.Net.Http;
 using System.Net.Http;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -12,8 +11,10 @@ namespace EasyMicroservice.Laboratory.Tests.Engine.Net.Http
     {
         string NormalizeOSText(string text)
         {
-           if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+#if (!NET452 && !NET48)
+            if (!System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
                 return text.Replace("\r\n", "\n");
+#endif
             return text;
         }
         [Theory]
