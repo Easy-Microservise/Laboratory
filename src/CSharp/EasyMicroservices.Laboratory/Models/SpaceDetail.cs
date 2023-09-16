@@ -14,6 +14,7 @@ namespace EasyMicroservices.Laboratory.Models
     /// </summary>
     public class SpaceDetail
     {
+        internal int Index { get; set; }
         /// <summary>
         /// unique hash of request
         /// </summary>

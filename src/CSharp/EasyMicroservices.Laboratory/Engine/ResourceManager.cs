@@ -1,5 +1,7 @@
 ﻿using EasyMicroservices.Laboratory.Models;
+using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace EasyMicroservices.Laboratory.Engine
 {
@@ -8,7 +10,8 @@ namespace EasyMicroservices.Laboratory.Engine
     /// </summary>
     public class ResourceManager
     {
-        internal ConcurrentDictionary<string, SpaceDetail> Spaces { get; set; } = new ConcurrentDictionary<string, SpaceDetail>();
+        internal Scope CurrentScope { get; set; } = new Scope();
+        internal HashSet<Scope> Scopes { get; set; } = new HashSet<Scope>();
 
         /// <summary>
         /// append request and response
@@ -17,8 +20,15 @@ namespace EasyMicroservices.Laboratory.Engine
         /// <param name="resposneBody"></param>
         public void Append(string requestBody, string resposneBody)
         {
-            var spaceDetail = SpaceDetail.Load(requestBody, resposneBody);
-            Spaces.TryAdd(resposneBody, spaceDetail);
+            CurrentScope.Append(requestBody, resposneBody);
+        }
+
+        /// <summary>
+        /// append request and response
+        /// </summary>
+        public void Append(Scope scope)
+        {
+            Scopes.Add(scope);
         }
     }
 }

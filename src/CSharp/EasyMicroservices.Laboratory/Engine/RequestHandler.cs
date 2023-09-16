@@ -33,10 +33,15 @@ namespace EasyMicroservices.Laboratory.Engine
 
         SpaceDetail FindSpace(string requestBody)
         {
-            foreach (var space in _resourceManager.Spaces.Values.ToArray())
+            var result = _resourceManager.CurrentScope.FindSpace(requestBody);
+            if (result != null)
+                return result;
+
+            foreach (var scope in _resourceManager.Scopes)
             {
-                if (space.IsValid(requestBody))
-                    return space;
+                result = scope.FindNext(requestBody);
+                if (result != null)
+                    return result;
             }
             return default;
         }
