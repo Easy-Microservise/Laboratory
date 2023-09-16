@@ -9,7 +9,7 @@ namespace EasyMicroservices.Laboratory.Engine
     /// </summary>
     public class RequestHandler
     {
-        ResourceManager _resourceManager;
+        readonly ResourceManager _resourceManager;
         /// <summary>
         /// 
         /// </summary>
