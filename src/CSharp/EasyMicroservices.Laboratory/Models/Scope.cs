@@ -65,5 +65,14 @@ namespace EasyMicroservices.Laboratory.Models
             }
             return default;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Clear()
+        {
+            Spaces.Clear();
+            Nexts.Clear();
+        }
     }
 }

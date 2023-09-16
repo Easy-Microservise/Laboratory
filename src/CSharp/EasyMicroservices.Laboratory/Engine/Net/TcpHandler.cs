@@ -59,19 +59,27 @@ namespace EasyMicroservices.Laboratory.Engine.Net
             }
             return port;
         }
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Stop()
+        {
+            _tcpListener.Stop();
+        }
 
+        TcpListener _tcpListener;
         Task InternalStart(int port)
         {
-            TcpListener tcpListener = new TcpListener(IPAddress.Any, port);
-            tcpListener.Start();
-
+            _tcpListener = new TcpListener(IPAddress.Any, port);
+            _tcpListener.Start();
             _ = Task.Factory.StartNew(async () =>
             {
                 while (true)
                 {
                     try
                     {
-                        var tcpClient = await tcpListener.AcceptTcpClientAsync();
+                        var tcpClient = await _tcpListener.AcceptTcpClientAsync();
                         _ = Task.Run(async () =>
                         {
                             try

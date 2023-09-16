@@ -30,5 +30,14 @@ namespace EasyMicroservices.Laboratory.Engine
         {
             Scopes.Add(scope);
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Clear()
+        {
+            Scopes.Clear();
+            CurrentScope.Clear();
+        }
     }
 }
