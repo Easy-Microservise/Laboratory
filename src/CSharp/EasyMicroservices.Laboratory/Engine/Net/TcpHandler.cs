@@ -165,7 +165,7 @@ namespace EasyMicroservices.Laboratory.Engine.Net
             return result;
         }
 
-        static string _lastResponseBody = "";
+        string _lastResponseBody = "";
         /// <summary>
         /// 
         /// </summary>
