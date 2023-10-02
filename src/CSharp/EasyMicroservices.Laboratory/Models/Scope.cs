@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Linq;
 
 namespace EasyMicroservices.Laboratory.Models
@@ -19,6 +20,8 @@ namespace EasyMicroservices.Laboratory.Models
         /// <param name="resposneBody"></param>
         public void Append(string requestBody, string resposneBody)
         {
+            requestBody = NormalizeOSText(requestBody);
+            resposneBody = NormalizeOSText(resposneBody);
             var spaceDetail = SpaceDetail.Load(requestBody, resposneBody);
             Spaces.TryAdd(resposneBody, spaceDetail);
         }
@@ -35,6 +38,8 @@ namespace EasyMicroservices.Laboratory.Models
         /// <param name="resposneBody"></param>
         public void AppendNext(string requestBody, string resposneBody)
         {
+            requestBody = NormalizeOSText(requestBody);
+            resposneBody = NormalizeOSText(resposneBody);
             var spaceDetail = SpaceDetail.Load(requestBody, resposneBody);
             spaceDetail.Index = GetMax();
             spaceDetail.Index++;
@@ -43,6 +48,7 @@ namespace EasyMicroservices.Laboratory.Models
 
         internal SpaceDetail FindSpace(string requestBody)
         {
+            requestBody = NormalizeOSText(requestBody);
             foreach (var space in Spaces.Values.ToArray())
             {
                 if (space.IsValid(requestBody))
@@ -53,6 +59,7 @@ namespace EasyMicroservices.Laboratory.Models
 
         internal SpaceDetail FindNext(string requestBody)
         {
+            requestBody = NormalizeOSText(requestBody);
             foreach (var space in Nexts.Values.OrderBy(x => x.Index).ToArray())
             {
                 if (space.IsValid(requestBody) && space.Index > CurrentIndex)
@@ -64,6 +71,13 @@ namespace EasyMicroservices.Laboratory.Models
                 }
             }
             return default;
+        }
+
+        string NormalizeOSText(string text)
+        {
+            if (System.Environment.OSVersion.Platform == PlatformID.Unix)
+                return text.Replace("\r\n", "\n");
+            return text;
         }
 
         /// <summary>
