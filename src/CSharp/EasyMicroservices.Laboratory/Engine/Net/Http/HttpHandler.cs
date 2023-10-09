@@ -1,6 +1,8 @@
-﻿using EasyMicroservices.Utilities.Constants;
+﻿using EasyMicroservices.Laboratory.IO;
+using EasyMicroservices.Utilities.Constants;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
@@ -21,6 +23,7 @@ namespace EasyMicroservices.Laboratory.Engine.Net.Http
 
         }
 
+
         /// <summary>
         /// Handle Tcp client of a http client
         /// </summary>
@@ -28,7 +31,7 @@ namespace EasyMicroservices.Laboratory.Engine.Net.Http
         /// <returns></returns>
         protected override async Task HandleTcpClient(TcpClient tcpClient)
         {
-            using var stream = tcpClient.GetStream();
+            using var stream = new PipelineStream(tcpClient.GetStream());
             string firstLine = await ReadLineAsync(stream);
             StringBuilder fullBody = new StringBuilder();
             Dictionary<string, string> headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -58,6 +61,7 @@ namespace EasyMicroservices.Laboratory.Engine.Net.Http
                 fullBody.Append(requestBody);
             }
             await WriteResponseAsync(firstLine, headers, requestBody, fullBody, stream);
+            tcpClient.Client.Shutdown(SocketShutdown.Send);
         }
     }
 }

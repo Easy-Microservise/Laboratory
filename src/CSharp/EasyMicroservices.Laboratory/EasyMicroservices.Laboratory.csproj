@@ -4,7 +4,7 @@
     <Platforms>AnyCPU;x64;x86</Platforms>
     <Authors>EasyMicroservices</Authors>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.0.0.11</Version>
+    <Version>0.0.0.12</Version>
     <Description>Laboratory of http client.</Description>
     <Copyright>EasyMicroservices@gmail.com</Copyright>
     <PackageTags>test,tests,http,https,httpclient,laboratory</PackageTags>
