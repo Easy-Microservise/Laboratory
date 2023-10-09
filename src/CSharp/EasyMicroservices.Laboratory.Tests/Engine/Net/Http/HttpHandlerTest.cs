@@ -2,6 +2,8 @@
 using EasyMicroservices.Laboratory.Engine;
 using EasyMicroservices.Laboratory.Engine.Net.Http;
 using EasyMicroservices.Laboratory.Models;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Xunit;
@@ -35,6 +37,64 @@ namespace EasyMicroservice.Laboratory.Tests.Engine.Net.Http
             var data = new StringContent(request);
             var httpResponse = await httpClient.PostAsync($"http://localhost:{port}", data);
             Assert.Equal(await httpResponse.Content.ReadAsStringAsync(), response);
+        }
+
+        [Theory]
+        [InlineData($"Hello Ali \r\n Hi Mahdi", "Reza")]
+        [InlineData($"Hello Ali \r\n Hi Mahdi2", "Reza2")]
+        [InlineData($"Hello Ali \r\n Hi Mahdi3", "Reza3")]
+        public async Task ConcurrentCheckSimpleRequestAndResponse(string request, string response)
+        {
+            request = NormalizeOSText(request);
+            response = NormalizeOSText(response);
+            ResourceManager resourceManager = new ResourceManager();
+            resourceManager.Append(request, GetHttpResponseHeaders(response));
+            HttpHandler httpHandler = new HttpHandler(resourceManager);
+            var port = await httpHandler.Start();
+
+            List<Task<bool>> all = new List<Task<bool>>();
+            for (int i = 0; i < 100; i++)
+            {
+                all.Add(Task.Run(async () =>
+                {
+                    HttpClient httpClient = new HttpClient();
+                    var data = new StringContent(request);
+                    var httpResponse = await httpClient.PostAsync($"http://localhost:{port}", data);
+                    Assert.Equal(await httpResponse.Content.ReadAsStringAsync(), response);
+                    return true;
+                }));
+            }
+            await Task.WhenAll(all);
+            Assert.True(all.All(x => x.Result));
+        }
+
+        [Theory]
+        [InlineData($"Hello Ali \r\n Hi Mahdi", "Reza")]
+        [InlineData($"Hello Ali \r\n Hi Mahdi2", "Reza2")]
+        [InlineData($"Hello Ali \r\n Hi Mahdi3", "Reza3")]
+        public async Task ConcurrentSingleHttpClientCheckSimpleRequestAndResponse(string request, string response)
+        {
+            request = NormalizeOSText(request);
+            response = NormalizeOSText(response);
+            ResourceManager resourceManager = new ResourceManager();
+            resourceManager.Append(request, GetHttpResponseHeaders(response));
+            HttpHandler httpHandler = new HttpHandler(resourceManager);
+            var port = await httpHandler.Start();
+            HttpClient httpClient = new HttpClient();
+
+            List<Task<bool>> all = new List<Task<bool>>();
+            for (int i = 0; i < 100; i++)
+            {
+                all.Add(Task.Run(async () =>
+                {
+                    var data = new StringContent(request);
+                    var httpResponse = await httpClient.PostAsync($"http://localhost:{port}", data);
+                    Assert.Equal(await httpResponse.Content.ReadAsStringAsync(), response);
+                    return true;
+                }));
+            }
+            await Task.WhenAll(all);
+            Assert.True(all.All(x => x.Result));
         }
 
         [Theory]
@@ -75,7 +135,7 @@ namespace EasyMicroservice.Laboratory.Tests.Engine.Net.Http
             var httpResponse = await httpClient.PostAsync($"http://localhost:{port}", data);
             var textResponse = await httpResponse.Content.ReadAsStringAsync();
 
-            httpClient.DefaultRequestHeaders.Clear();
+            httpClient = new HttpClient();
             httpClient.DefaultRequestHeaders.Add(RequestTypeHeaderConstants.RequestTypeHeader, RequestTypeHeaderConstants.GiveMeLastFullRequestHeaderValue);
             httpResponse = await httpClient.GetAsync($"http://localhost:{port}");
             textResponse = await httpResponse.Content.ReadAsStringAsync();
@@ -178,23 +238,31 @@ Reza"));
             resourceManager.Append(scope);
             HttpHandler httpHandler = new HttpHandler(resourceManager);
             var port = await httpHandler.Start();
+            var addHeaders = (HttpClient client) =>
+            {
+                client.DefaultRequestHeaders.Add("x-amz-meta-title", "someTitle");
+                client.DefaultRequestHeaders.Add("User-Agent", "aws-sdk-dotnet-coreclr/3.7.101.44 aws-sdk-dotnet-core/3.7.103.6 .NET_Core/6.0.11 OS/Microsoft_Windows_10.0.22000 ClientAsync");
+                client.DefaultRequestHeaders.Add("amz-sdk-invocation-id", "guid");
+                client.DefaultRequestHeaders.Add("amz-sdk-request", "attempt=1; max=5");
+                client.DefaultRequestHeaders.Add("X-Amz-Date", "20230107T162454Z");
+                client.DefaultRequestHeaders.Add("X-Amz-Content-SHA256", "sha256");
+                client.DefaultRequestHeaders.Add("Authorization", "empty");
+                client.DefaultRequestHeaders.Add("Host", "s3.eu-west-1.amazonaws.com");
+            };
             HttpClient httpClient = new HttpClient();
-            httpClient.DefaultRequestHeaders.Add("x-amz-meta-title", "someTitle");
-            httpClient.DefaultRequestHeaders.Add("User-Agent", "aws-sdk-dotnet-coreclr/3.7.101.44 aws-sdk-dotnet-core/3.7.103.6 .NET_Core/6.0.11 OS/Microsoft_Windows_10.0.22000 ClientAsync");
-            httpClient.DefaultRequestHeaders.Add("amz-sdk-invocation-id", "guid");
-            httpClient.DefaultRequestHeaders.Add("amz-sdk-request", "attempt=1; max=5");
-            httpClient.DefaultRequestHeaders.Add("X-Amz-Date", "20230107T162454Z");
-            httpClient.DefaultRequestHeaders.Add("X-Amz-Content-SHA256", "sha256");
-            httpClient.DefaultRequestHeaders.Add("Authorization", "empty");
-            httpClient.DefaultRequestHeaders.Add("Host", "s3.eu-west-1.amazonaws.com");
+            addHeaders(httpClient);
             var httpResponse = await httpClient.PutAsync($"http://localhost:{port}", null);
             var textResponse = await httpResponse.Content.ReadAsStringAsync();
             Assert.Equal("Ali", textResponse);
 
+            httpClient = new HttpClient();
+            addHeaders(httpClient);
             httpResponse = await httpClient.PutAsync($"http://localhost:{port}", null);
             textResponse = await httpResponse.Content.ReadAsStringAsync();
             Assert.Equal("Reza", textResponse);
 
+            httpClient = new HttpClient();
+            addHeaders(httpClient);
             httpResponse = await httpClient.PutAsync($"http://localhost:{port}", null);
             textResponse = await httpResponse.Content.ReadAsStringAsync();
             Assert.Equal("Ali", textResponse);

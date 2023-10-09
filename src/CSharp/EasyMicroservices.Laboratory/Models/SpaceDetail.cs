@@ -146,7 +146,7 @@ namespace EasyMicroservices.Laboratory.Models
                 {
                     hasBody = true;
                     var body = await reader.ReadToEndAsync();
-                    stringBuilder.AppendLine($"Content-Length: {body.Length}");
+                    stringBuilder.AppendLine($"Content-Length: {Encoding.UTF8.GetByteCount(body)}");
                     stringBuilder.AppendLine("");
                     stringBuilder.Append(body);
                     break;
@@ -160,7 +160,7 @@ namespace EasyMicroservices.Laboratory.Models
                 stringBuilder.AppendLine($"Content-Length: 0");
                 stringBuilder.AppendLine("");
             }
-            return stringBuilder.ToString();
+            return Encoding.UTF8.GetString(Encoding.UTF8.GetBytes(stringBuilder.ToString()));
         }
     }
 }

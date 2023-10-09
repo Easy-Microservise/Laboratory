@@ -1,11 +1,13 @@
 ﻿using EasyMicroservices.Laboratory.Constants;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace EasyMicroservices.Laboratory.Engine.Net
@@ -69,7 +71,12 @@ namespace EasyMicroservices.Laboratory.Engine.Net
         }
 
         TcpListener _tcpListener;
-        Task InternalStart(int port)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="port"></param>
+        /// <returns></returns>
+        protected virtual Task InternalStart(int port)
         {
             _tcpListener = new TcpListener(IPAddress.Any, port);
             _tcpListener.Start();
@@ -80,17 +87,7 @@ namespace EasyMicroservices.Laboratory.Engine.Net
                     try
                     {
                         var tcpClient = await _tcpListener.AcceptTcpClientAsync();
-                        _ = Task.Run(async () =>
-                        {
-                            try
-                            {
-                                await HandleTcpClient(tcpClient);
-                            }
-                            catch
-                            {
-                                tcpClient.Close();
-                            }
-                        });
+                        ThreadPool.QueueUserWorkItem(InternalHandleTcpClient, tcpClient);
                     }
                     catch
                     {
@@ -99,6 +96,19 @@ namespace EasyMicroservices.Laboratory.Engine.Net
                 }
             });
             return TaskHelper.GetCompletedTask();
+        }
+
+        async void InternalHandleTcpClient(object tcpClient)
+        {
+            var client = (TcpClient)tcpClient;
+            try
+            {
+                await HandleTcpClient(client);
+            }
+            catch
+            {
+                client.Close();
+            }
         }
 
         /// <summary>
@@ -201,6 +211,7 @@ namespace EasyMicroservices.Laboratory.Engine.Net
             _lastResponseBody = responseBody;
             var responseBodyBytes = Encoding.UTF8.GetBytes(responseBody);
             await stream.WriteAsync(responseBodyBytes, 0, responseBodyBytes.Length);
+            await stream.FlushAsync();
         }
 
         string GetGiveMeFullRequestHeaderValueResponse(string firstLine, Dictionary<string, string> requestHeaders, string requestBody)
