@@ -107,7 +107,6 @@ namespace EasyMicroservices.Laboratory.Engine.Net
             }
             catch
             {
-                client.Client.Shutdown(SocketShutdown.Send);
                 client.Close();
             }
         }
