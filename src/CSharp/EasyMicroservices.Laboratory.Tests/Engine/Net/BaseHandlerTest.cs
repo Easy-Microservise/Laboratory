@@ -1,17 +1,34 @@
 ﻿using EasyMicroservices.Laboratory.Constants;
 using EasyMicroservices.Laboratory.Engine;
+using EasyMicroservices.Laboratory.Engine.Net;
 using EasyMicroservices.Laboratory.Engine.Net.Http;
 using EasyMicroservices.Laboratory.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace EasyMicroservice.Laboratory.Tests.Engine.Net.Http
+namespace EasyMicroservice.Laboratory.Tests.Engine.Net
 {
-    public class HttpHandlerTest : BaseHandler
+    public abstract class BaseHandlerTest
     {
+
+        protected abstract BaseHandler GetHandler(ResourceManager resourceManager);
+        public string GetHttpResponseHeaders(string response)
+        {
+            return @$"HTTP/1.1 200 OK
+Cache-Control: no-cache
+Pragma: no-cache
+Content-Type: application/json; charset=utf-8
+Vary: Accept-Encoding
+Date: Mon, 16 Mar 2020 07:48:17 GMT
+
+{response}";
+        }
+
         string NormalizeOSText(string text)
         {
 #if (!NET452 && !NET48)
@@ -30,8 +47,7 @@ namespace EasyMicroservice.Laboratory.Tests.Engine.Net.Http
             response = NormalizeOSText(response);
             ResourceManager resourceManager = new ResourceManager();
             resourceManager.Append(request, GetHttpResponseHeaders(response));
-            HttpHandler httpHandler = new HttpHandler(resourceManager);
-            var port = await httpHandler.Start();
+            var port = await GetHandler(resourceManager).Start();
 
             HttpClient httpClient = new HttpClient();
             var data = new StringContent(request);
@@ -49,8 +65,7 @@ namespace EasyMicroservice.Laboratory.Tests.Engine.Net.Http
             response = NormalizeOSText(response);
             ResourceManager resourceManager = new ResourceManager();
             resourceManager.Append(request, GetHttpResponseHeaders(response));
-            HttpHandler httpHandler = new HttpHandler(resourceManager);
-            var port = await httpHandler.Start();
+            var port = await GetHandler(resourceManager).Start();
 
             List<Task<bool>> all = new List<Task<bool>>();
             for (int i = 0; i < 100; i++)
@@ -78,8 +93,7 @@ namespace EasyMicroservice.Laboratory.Tests.Engine.Net.Http
             response = NormalizeOSText(response);
             ResourceManager resourceManager = new ResourceManager();
             resourceManager.Append(request, GetHttpResponseHeaders(response));
-            HttpHandler httpHandler = new HttpHandler(resourceManager);
-            var port = await httpHandler.Start();
+            var port = await GetHandler(resourceManager).Start();
             HttpClient httpClient = new HttpClient();
 
             List<Task<bool>> all = new List<Task<bool>>();
@@ -98,14 +112,13 @@ namespace EasyMicroservice.Laboratory.Tests.Engine.Net.Http
         }
 
         [Theory]
-        [InlineData("Hello Ali \r\n Hi Mahdi", $"POST / HTTP/1.1\r\nHost: localhost:*MyPort*\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Length: 21\r\n\r\nHello Ali \r\n Hi Mahdi")]
+        [InlineData("Hello Ali \r\n Hi Mahdi", $"POST / HTTP/1.1\r\nContent-Length: 21\r\nContent-Type: text/plain; charset=utf-8\r\nHost: localhost:*MyPort*\r\n\r\nHello Ali \r\n Hi Mahdi")]
         public async Task CheckSimpleRequestToGiveMeFullRequestHeaderValue(string request, string response)
         {
             request = NormalizeOSText(request);
             response = NormalizeOSText(response);
             ResourceManager resourceManager = new ResourceManager();
-            HttpHandler httpHandler = new HttpHandler(resourceManager);
-            var port = await httpHandler.Start();
+            var port = await GetHandler(resourceManager).Start();
             response = response.Replace("*MyPort*", port.ToString());
             HttpClient httpClient = new HttpClient();
             httpClient.DefaultRequestHeaders.ExpectContinue = false;
@@ -119,14 +132,13 @@ namespace EasyMicroservice.Laboratory.Tests.Engine.Net.Http
         }
 
         [Theory]
-        [InlineData("Hello Ali \r\n Hi Mahdi", $"POST / HTTP/1.1\r\nHost: localhost:*MyPort*\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Length: 21\r\n\r\nHello Ali \r\n Hi Mahdi")]
+        [InlineData("Hello Ali \r\n Hi Mahdi", $"POST / HTTP/1.1\r\nContent-Length: 21\r\nContent-Type: text/plain; charset=utf-8\r\nHost: localhost:*MyPort*\r\n\r\nHello Ali \r\n Hi Mahdi")]
         public async Task CheckSimpleRequestToGiveMeLastFullRequestHeaderValue(string request, string response)
         {
             request = NormalizeOSText(request);
             response = NormalizeOSText(response);
             ResourceManager resourceManager = new ResourceManager();
-            HttpHandler httpHandler = new HttpHandler(resourceManager);
-            var port = await httpHandler.Start();
+            var port = await GetHandler(resourceManager).Start();
             response = response.Replace("*MyPort*", port.ToString());
             HttpClient httpClient = new HttpClient();
             httpClient.DefaultRequestHeaders.ExpectContinue = false;
@@ -172,8 +184,7 @@ Ali", "Ali")]
             response = NormalizeOSText(response);
             ResourceManager resourceManager = new ResourceManager();
             resourceManager.Append(request, response);
-            HttpHandler httpHandler = new HttpHandler(resourceManager);
-            var port = await httpHandler.Start();
+            var port = await GetHandler(resourceManager).Start();
             HttpClient httpClient = new HttpClient();
             httpClient.DefaultRequestHeaders.Add("x-amz-meta-title", "someTitle");
             httpClient.DefaultRequestHeaders.Add("User-Agent", "aws-sdk-dotnet-coreclr/3.7.101.44 aws-sdk-dotnet-core/3.7.103.6 .NET_Core/6.0.11 OS/Microsoft_Windows_10.0.22000 ClientAsync");
@@ -236,8 +247,7 @@ Content-Length: 0
 
 Reza"));
             resourceManager.Append(scope);
-            HttpHandler httpHandler = new HttpHandler(resourceManager);
-            var port = await httpHandler.Start();
+            var port = await GetHandler(resourceManager).Start();
             var addHeaders = (HttpClient client) =>
             {
                 client.DefaultRequestHeaders.Add("x-amz-meta-title", "someTitle");

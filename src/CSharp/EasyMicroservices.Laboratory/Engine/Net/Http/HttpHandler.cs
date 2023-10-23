@@ -1,18 +1,16 @@
-﻿using EasyMicroservices.Laboratory.IO;
-using EasyMicroservices.Utilities.Constants;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Net.Sockets;
+﻿using System;
+using System.IO;
+using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace EasyMicroservices.Laboratory.Engine.Net.Http
 {
     /// <summary>
-    /// Http protocol handler of Laboratory
+    /// 
     /// </summary>
-    public class HttpHandler : TcpHandler
+    public class HttpHandler : HttpHandlerBase
     {
         /// <summary>
         /// 
@@ -23,45 +21,46 @@ namespace EasyMicroservices.Laboratory.Engine.Net.Http
 
         }
 
-
         /// <summary>
-        /// Handle Tcp client of a http client
+        /// 
         /// </summary>
-        /// <param name="tcpClient"></param>
+        /// <param name="httpClient"></param>
         /// <returns></returns>
-        protected override async Task HandleTcpClient(TcpClient tcpClient)
+        /// <exception cref="NotImplementedException"></exception>
+        protected override async Task HandleHttpClient(HttpListenerContext httpClient)
         {
-            using var stream = new PipelineStream(tcpClient.GetStream());
-            string firstLine = await ReadLineAsync(stream);
+            var reader = new StreamReader(httpClient.Request.InputStream);
+            var requestBody = await reader.ReadToEndAsync();
+            var firstLine = $"{httpClient.Request.HttpMethod} {httpClient.Request.RawUrl} HTTP/{httpClient.Request.ProtocolVersion}";
+            var headers = httpClient.Request.Headers.AllKeys.Select(x => new { Key = x, Value = httpClient.Request.Headers[x] }).ToDictionary((x) => x.Key, (v) => v.Value);
             StringBuilder fullBody = new StringBuilder();
-            Dictionary<string, string> headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             fullBody.AppendLine(firstLine);
-            //read headers
-            while (true)
+            foreach (var item in headers.OrderBy(x => x.Key))
             {
-                var line = await ReadLineAsync(stream);
-                if (string.IsNullOrEmpty(line))
-                    break;
-                var headerValue = line.Split(new char[] { ':' }, 2);
-                headers.TryAddItem(headerValue[0], headerValue[1].Trim());
-                fullBody.AppendLine(line);
+                fullBody.AppendLine($"{item.Key}: {item.Value}");
             }
-            int contentLength = 0;
-            if (headers.TryGetValue(HttpHeadersConstants.ContentLength, out string contentLengthValue))
+            fullBody.Append(requestBody);
+            var responseBody = await WriteResponseAsync(firstLine, headers, requestBody, fullBody);
+            using (var responseReader = new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(responseBody))))
             {
-                contentLength = int.Parse(contentLengthValue);
-            }
+                await responseReader.ReadLineAsync();
+                do
+                {
+                    var line = await responseReader.ReadLineAsync();
+                    if (string.IsNullOrEmpty(line))
+                        break;
+                    var header = line.Split(':');
+                    if (header[0].Equals("content-length", StringComparison.OrdinalIgnoreCase))
+                        continue;
+                    httpClient.Response.AddHeader(header[0], header[1]);
+                }
+                while (true);
+                var body = await responseReader.ReadToEndAsync();
+                var bytes = Encoding.UTF8.GetBytes(body);
+                httpClient.Response.ContentLength64 = bytes.Length;
 
-            string requestBody = "";
-            if (contentLength > 0)
-            {
-                var buffer = await ReadBlockAsync(stream, contentLength);
-                requestBody = Encoding.UTF8.GetString(buffer);
-                fullBody.AppendLine();
-                fullBody.Append(requestBody);
+                await httpClient.Response.OutputStream.WriteAsync(bytes, 0, bytes.Length);
             }
-            await WriteResponseAsync(firstLine, headers, requestBody, fullBody, stream);
-            tcpClient.Client.Shutdown(SocketShutdown.Send);
         }
     }
 }
