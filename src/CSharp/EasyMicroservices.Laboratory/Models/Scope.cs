@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace EasyMicroservices.Laboratory.Models
@@ -13,6 +15,7 @@ namespace EasyMicroservices.Laboratory.Models
         internal ConcurrentDictionary<string, SpaceDetail> Nexts { get; set; } = new ConcurrentDictionary<string, SpaceDetail>();
 
         internal int CurrentIndex { get; set; }
+
         /// <summary>
         /// append request and response
         /// </summary>
@@ -20,10 +23,40 @@ namespace EasyMicroservices.Laboratory.Models
         /// <param name="resposneBody"></param>
         public void Append(string requestBody, string resposneBody)
         {
-            requestBody = NormalizeOSText(requestBody);
+            requestBody = OrderHeaders(NormalizeOSText(requestBody));
             resposneBody = NormalizeOSText(resposneBody);
             var spaceDetail = SpaceDetail.Load(requestBody, resposneBody);
             Spaces.TryAdd(resposneBody, spaceDetail);
+        }
+
+        string OrderHeaders(string request)
+        {
+            string firstLine = "";
+            using (var reader = new StreamReader(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(request))))
+            {
+                firstLine = reader.ReadLine();
+                if (!firstLine.ToLower().Contains("http/"))
+                    return request;
+                Dictionary<string, string> headers = new Dictionary<string, string>();
+                do
+                {
+                    var line = reader.ReadLine();
+                    if (string.IsNullOrEmpty(line))
+                        break;
+                    var header = line.Split(':');
+                    headers.Add(header[0], header[1]);
+
+                }
+                while (true);
+                var builder = new System.Text.StringBuilder();
+                builder.AppendLine(firstLine);
+                foreach (var header in headers.OrderBy(x => x.Key))
+                {
+                    builder.AppendLine($"{header.Key}:{header.Value}");
+                }
+                builder.Append(reader.ReadToEnd());
+                return builder.ToString();
+            }
         }
 
         int GetMax()
@@ -38,7 +71,7 @@ namespace EasyMicroservices.Laboratory.Models
         /// <param name="resposneBody"></param>
         public void AppendNext(string requestBody, string resposneBody)
         {
-            requestBody = NormalizeOSText(requestBody);
+            requestBody = OrderHeaders(NormalizeOSText(requestBody));
             resposneBody = NormalizeOSText(resposneBody);
             var spaceDetail = SpaceDetail.Load(requestBody, resposneBody);
             spaceDetail.Index = GetMax();
