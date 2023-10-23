@@ -50,7 +50,7 @@ namespace EasyMicroservices.Laboratory.Models
                 while (true);
                 var builder = new System.Text.StringBuilder();
                 builder.AppendLine(firstLine);
-                foreach (var header in headers.OrderBy(x=>x.Key))
+                foreach (var header in headers.OrderBy(x => x.Key))
                 {
                     builder.AppendLine($"{header.Key}:{header.Value}");
                 }
