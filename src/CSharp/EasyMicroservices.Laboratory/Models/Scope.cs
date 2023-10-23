@@ -38,21 +38,32 @@ namespace EasyMicroservices.Laboratory.Models
                 if (!firstLine.ToLower().Contains("http/"))
                     return request;
                 Dictionary<string, string> headers = new Dictionary<string, string>();
+                int index = 0;
                 do
                 {
                     var line = reader.ReadLine();
                     if (string.IsNullOrEmpty(line))
                         break;
-                    var header = line.Split(':');
-                    headers.Add(header[0], header[1]);
-
+                    if (line.Contains(":"))
+                    {
+                        var header = line.Split(':');
+                        headers.Add(header[0], header[1]);
+                    }
+                    else
+                    {
+                        headers.Add($"*NoHeader{index}", line);
+                        index++;
+                    }
                 }
                 while (true);
                 var builder = new System.Text.StringBuilder();
                 builder.AppendLine(firstLine);
-                foreach (var header in headers.OrderBy(x=>x.Key))
+                foreach (var header in headers.OrderBy(x => x.Key))
                 {
-                    builder.AppendLine($"{header.Key}:{header.Value}");
+                    if (header.Key.StartsWith("*NoHeader"))
+                        builder.AppendLine($"{header.Value}");
+                    else
+                        builder.AppendLine($"{header.Key}:{header.Value}");
                 }
                 builder.Append(reader.ReadToEnd());
                 return builder.ToString();
