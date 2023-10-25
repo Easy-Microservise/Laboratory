@@ -10,7 +10,7 @@ namespace EasyMicroservices.Laboratory.Tests.Engine.Net
     {
         protected override BaseHandler GetHandler(ResourceManager resourceManager)
         {
-            return new HostHttpHandler(resourceManager);
+            return BaseHandler.CreateOSHandler(resourceManager);
         }
     }
 }
