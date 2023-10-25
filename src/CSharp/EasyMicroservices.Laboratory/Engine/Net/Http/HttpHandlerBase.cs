@@ -38,6 +38,7 @@ namespace EasyMicroservices.Laboratory.Engine.Net.Http
         public override async Task<int> Start()
         {
             int port;
+            int retry = 0;
             while (true)
             {
                 port = GetRandomPort();
@@ -48,6 +49,9 @@ namespace EasyMicroservices.Laboratory.Engine.Net.Http
                 }
                 catch
                 {
+                    retry++;
+                    if (retry > 5)
+                        throw;
                 }
             }
             return port;
