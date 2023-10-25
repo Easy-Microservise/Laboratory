@@ -1,12 +1,5 @@
-﻿using EasyMicroservices.Laboratory.Constants;
+﻿using EasyMicroservices.Laboratory.Engine.Net.Http;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Sockets;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace EasyMicroservices.Laboratory.Engine.Net
@@ -54,6 +47,22 @@ namespace EasyMicroservices.Laboratory.Engine.Net
         public int GetRandomPort()
         {
             return _random.Next(1111, 9999);
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="resourceManager"></param>
+        /// <returns></returns>
+        public static BaseHandler CreateOSHandler(ResourceManager resourceManager)
+        {
+#if (NET6_0_OR_GREATER)
+            if (System.Environment.OSVersion.Platform == PlatformID.Unix)
+                return new HostHttpHandler(resourceManager);
+            else
+                return new HttpHandler(resourceManager);
+#else
+            throw new NotSupportedException("Only support on net6.0 or grater!");
+#endif
         }
     }
 }

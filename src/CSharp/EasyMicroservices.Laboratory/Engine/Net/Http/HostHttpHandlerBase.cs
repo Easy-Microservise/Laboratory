@@ -1,29 +1,34 @@
-﻿using EasyMicroservices.Laboratory.Constants;
+﻿#if (NET6_0_OR_GREATER)
+using EasyMicroservices.Laboratory.Constants;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Globalization;
 using System.Linq;
 using System.Net;
-using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace EasyMicroservices.Laboratory.Engine.Net
+namespace EasyMicroservices.Laboratory.Engine.Net.Http
 {
     /// <summary>
-    /// Handle the Tcp services
+    /// 
     /// </summary>
-    public abstract class TcpHandlerBase : BaseHandler
+    public abstract class HostHttpHandlerBase : BaseHandler
     {
         /// <summary>
         /// 
         /// </summary>
-        public TcpHandlerBase(ResourceManager resourceManager) : base(resourceManager)
+        public HostHttpHandlerBase(ResourceManager resourceManager) : base(resourceManager)
         {
         }
+
         /// <summary>
-        /// Start the Tcp listener
+        /// Start the Http listener
         /// </summary>
         /// <param name="port"></param>
         /// <returns></returns>
@@ -39,7 +44,6 @@ namespace EasyMicroservices.Laboratory.Engine.Net
         public override async Task<int> Start()
         {
             int port;
-            int retry = 0;
             while (true)
             {
                 port = GetRandomPort();
@@ -50,9 +54,6 @@ namespace EasyMicroservices.Laboratory.Engine.Net
                 }
                 catch
                 {
-                    retry++;
-                    if (retry > 5)
-                        throw;
                 }
             }
             return port;
@@ -63,113 +64,33 @@ namespace EasyMicroservices.Laboratory.Engine.Net
         /// </summary>
         public override void Stop()
         {
-            _tcpListener.Stop();
+
         }
 
-        TcpListener _tcpListener;
         /// <summary>
         /// 
         /// </summary>
         /// <param name="port"></param>
         /// <returns></returns>
-        protected virtual Task InternalStart(int port)
+        protected virtual async Task InternalStart(int port)
         {
-            _tcpListener = new TcpListener(IPAddress.Any, port);
-            _tcpListener.Start();
-            _ = Task.Factory.StartNew(async () =>
+            var builder = WebApplication.CreateBuilder();
+            builder.WebHost.UseUrls($"http://*:{port}");
+            var app = builder.Build();
+            app.Use(async (context, next) =>
             {
-                while (true)
-                {
-                    try
-                    {
-                        var tcpClient = await _tcpListener.AcceptTcpClientAsync();
-                        ThreadPool.QueueUserWorkItem(InternalHandleTcpClient, tcpClient);
-                    }
-                    catch
-                    {
-
-                    }
-                }
+                await HandleHttpClient(context);
+                await next(context);
             });
-            return TaskHelper.GetCompletedTask();
-        }
-
-        async void InternalHandleTcpClient(object tcpClient)
-        {
-            var client = (TcpClient)tcpClient;
-            try
-            {
-                await HandleTcpClient(client);
-            }
-            catch
-            {
-                client.Close();
-            }
+            await Task.WhenAny(app.RunAsync(null), Task.Delay(3000));
         }
 
         /// <summary>
-        /// Handle a Tcp client
+        /// Handle a Http client
         /// </summary>
-        /// <param name="tcpClient"></param>
+        /// <param name="httpClient"></param>
         /// <returns></returns>
-        protected abstract Task HandleTcpClient(TcpClient tcpClient);
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="stream"></param>
-        /// <returns></returns>
-        public async Task<string> ReadLineAsync(Stream stream)
-        {
-            List<byte> data = new List<byte>();
-            do
-            {
-                byte[] bytes;
-                if (data.LastOrDefault() == 13)
-                {
-                    bytes = await ReadBlockAsync(stream, 1);
-                    data.AddRange(bytes);
-                    if (bytes[0] == 10)
-                        break;
-                }
-                else
-                {
-                    bytes = await ReadBlockAsync(stream, 2);
-                    data.AddRange(bytes);
-                    if (bytes[0] == 13 && bytes[1] == 10)
-                        break;
-                }
-            }
-            while (true);
-            return Encoding.UTF8.GetString(data.ToArray()).TrimEnd();
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="stream"></param>
-        /// <param name="length"></param>
-        /// <returns></returns>
-        /// <exception cref="Exception"></exception>
-        public async Task<byte[]> ReadBlockAsync(Stream stream, int length)
-        {
-            byte[] result = new byte[length];
-            int index = 0;
-            do
-            {
-                var bytes = new byte[length];
-                var readCount = await stream.ReadAsync(bytes, 0, bytes.Length);
-                if (readCount == 0)
-                    throw new Exception("Client Disconnected!");
-                for (int i = 0; i < readCount; i++)
-                {
-                    result[i + index] = bytes[i];
-                }
-                index += readCount;
-            }
-            while (index < length);
-            return result;
-        }
+        protected abstract Task HandleHttpClient(HttpContext httpClient);
 
         string _lastResponseBody = "";
         /// <summary>
@@ -179,9 +100,8 @@ namespace EasyMicroservices.Laboratory.Engine.Net
         /// <param name="requestHeaders"></param>
         /// <param name="requestBody"></param>
         /// <param name="fullBody"></param>
-        /// <param name="stream"></param>
         /// <returns></returns>
-        public async Task WriteResponseAsync(string firstLine, Dictionary<string, string> requestHeaders, string requestBody, StringBuilder fullBody, Stream stream)
+        public async Task<string> WriteResponseAsync(string firstLine, Dictionary<string, string> requestHeaders, string requestBody, StringBuilder fullBody)
         {
             string responseBody = "";
             if (requestHeaders.TryGetValue(RequestTypeHeaderConstants.RequestTypeHeader, out string headerTypeValue))
@@ -205,9 +125,7 @@ namespace EasyMicroservices.Laboratory.Engine.Net
             if (string.IsNullOrEmpty(responseBody))
                 responseBody = GetNoResponse(firstLine, requestHeaders, requestBody);
             _lastResponseBody = responseBody;
-            var responseBodyBytes = Encoding.UTF8.GetBytes(responseBody);
-            await stream.WriteAsync(responseBodyBytes, 0, responseBodyBytes.Length);
-            await stream.FlushAsync();
+            return responseBody;
         }
 
         string GetGiveMeFullRequestHeaderValueResponse(string firstLine, Dictionary<string, string> requestHeaders, string requestBody)
@@ -282,3 +200,4 @@ Vary: Accept-Encoding";
         }
     }
 }
+#endif

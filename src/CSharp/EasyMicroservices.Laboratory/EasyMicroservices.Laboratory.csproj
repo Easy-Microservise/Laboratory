@@ -4,7 +4,7 @@
     <Platforms>AnyCPU;x64;x86</Platforms>
     <Authors>EasyMicroservices</Authors>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.0.0.14</Version>
+    <Version>0.0.0.15</Version>
     <Description>Laboratory of http client.</Description>
     <Copyright>EasyMicroservices@gmail.com</Copyright>
     <PackageTags>test,tests,http,https,httpclient,laboratory</PackageTags>
@@ -18,5 +18,21 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="EasyMicroservices.Utilities" Version="0.0.0.11" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="Microsoft.Extensions.Hosting">
+      <Version>7.0.1</Version>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+    <PackageReference Include="Microsoft.Extensions.Hosting">
+      <Version>7.0.1</Version>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
+    <PackageReference Include="Microsoft.Extensions.Hosting">
+      <Version>7.0.1</Version>
+    </PackageReference>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 </Project>

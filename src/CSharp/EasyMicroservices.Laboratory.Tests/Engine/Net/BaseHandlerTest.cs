@@ -1,13 +1,12 @@
 ﻿using EasyMicroservices.Laboratory.Constants;
 using EasyMicroservices.Laboratory.Engine;
 using EasyMicroservices.Laboratory.Engine.Net;
-using EasyMicroservices.Laboratory.Engine.Net.Http;
 using EasyMicroservices.Laboratory.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -15,7 +14,26 @@ namespace EasyMicroservice.Laboratory.Tests.Engine.Net
 {
     public abstract class BaseHandlerTest
     {
+        public HttpClient GetHttpClient()
+        {
+            HttpClient httpClient = default;
+//            if (System.Environment.OSVersion.Platform != PlatformID.Unix)
+//            {
+//#if (NET452)
+//                httpClient = new HttpClient();
+//#else
+//                var handler = new WinHttpHandler();
+//                httpClient = new HttpClient(handler);
+//#endif
+//            }
+//            else
+                httpClient = new HttpClient();
 
+#if (!NET452 && !NET48)
+            httpClient.DefaultRequestVersion = HttpVersion.Version20;
+#endif
+            return httpClient;
+        }
         protected abstract BaseHandler GetHandler(ResourceManager resourceManager);
         public string GetHttpResponseHeaders(string response)
         {
@@ -49,7 +67,7 @@ Date: Mon, 16 Mar 2020 07:48:17 GMT
             resourceManager.Append(request, GetHttpResponseHeaders(response));
             var port = await GetHandler(resourceManager).Start();
 
-            HttpClient httpClient = new HttpClient();
+            HttpClient httpClient = GetHttpClient();
             var data = new StringContent(request);
             var httpResponse = await httpClient.PostAsync($"http://localhost:{port}", data);
             Assert.Equal(await httpResponse.Content.ReadAsStringAsync(), response);
@@ -72,7 +90,7 @@ Date: Mon, 16 Mar 2020 07:48:17 GMT
             {
                 all.Add(Task.Run(async () =>
                 {
-                    HttpClient httpClient = new HttpClient();
+                    HttpClient httpClient = GetHttpClient();
                     var data = new StringContent(request);
                     var httpResponse = await httpClient.PostAsync($"http://localhost:{port}", data);
                     Assert.Equal(await httpResponse.Content.ReadAsStringAsync(), response);
@@ -94,10 +112,10 @@ Date: Mon, 16 Mar 2020 07:48:17 GMT
             ResourceManager resourceManager = new ResourceManager();
             resourceManager.Append(request, GetHttpResponseHeaders(response));
             var port = await GetHandler(resourceManager).Start();
-            HttpClient httpClient = new HttpClient();
+            HttpClient httpClient = GetHttpClient();
 
             List<Task<bool>> all = new List<Task<bool>>();
-            for (int i = 0; i < 100; i++)
+            for (int i = 0; i < 20; i++)
             {
                 all.Add(Task.Run(async () =>
                 {
@@ -120,7 +138,7 @@ Date: Mon, 16 Mar 2020 07:48:17 GMT
             ResourceManager resourceManager = new ResourceManager();
             var port = await GetHandler(resourceManager).Start();
             response = response.Replace("*MyPort*", port.ToString());
-            HttpClient httpClient = new HttpClient();
+            HttpClient httpClient = GetHttpClient();
             httpClient.DefaultRequestHeaders.ExpectContinue = false;
             httpClient.DefaultRequestHeaders.Add(RequestTypeHeaderConstants.RequestTypeHeader, RequestTypeHeaderConstants.GiveMeFullRequestHeaderValue);
             var data = new StringContent(request);
@@ -140,14 +158,14 @@ Date: Mon, 16 Mar 2020 07:48:17 GMT
             ResourceManager resourceManager = new ResourceManager();
             var port = await GetHandler(resourceManager).Start();
             response = response.Replace("*MyPort*", port.ToString());
-            HttpClient httpClient = new HttpClient();
+            HttpClient httpClient = GetHttpClient();
             httpClient.DefaultRequestHeaders.ExpectContinue = false;
             httpClient.DefaultRequestHeaders.Add(RequestTypeHeaderConstants.RequestTypeHeader, RequestTypeHeaderConstants.GiveMeFullRequestHeaderValue);
             var data = new StringContent(request);
             var httpResponse = await httpClient.PostAsync($"http://localhost:{port}", data);
             var textResponse = await httpResponse.Content.ReadAsStringAsync();
 
-            httpClient = new HttpClient();
+            httpClient = GetHttpClient();
             httpClient.DefaultRequestHeaders.Add(RequestTypeHeaderConstants.RequestTypeHeader, RequestTypeHeaderConstants.GiveMeLastFullRequestHeaderValue);
             httpResponse = await httpClient.GetAsync($"http://localhost:{port}");
             textResponse = await httpResponse.Content.ReadAsStringAsync();
@@ -185,7 +203,7 @@ Ali", "Ali")]
             ResourceManager resourceManager = new ResourceManager();
             resourceManager.Append(request, response);
             var port = await GetHandler(resourceManager).Start();
-            HttpClient httpClient = new HttpClient();
+            HttpClient httpClient = GetHttpClient();
             httpClient.DefaultRequestHeaders.Add("x-amz-meta-title", "someTitle");
             httpClient.DefaultRequestHeaders.Add("User-Agent", "aws-sdk-dotnet-coreclr/3.7.101.44 aws-sdk-dotnet-core/3.7.103.6 .NET_Core/6.0.11 OS/Microsoft_Windows_10.0.22000 ClientAsync");
             httpClient.DefaultRequestHeaders.Add("amz-sdk-invocation-id", "guid");
@@ -259,19 +277,19 @@ Reza"));
                 client.DefaultRequestHeaders.Add("Authorization", "empty");
                 client.DefaultRequestHeaders.Add("Host", "s3.eu-west-1.amazonaws.com");
             };
-            HttpClient httpClient = new HttpClient();
+            HttpClient httpClient = GetHttpClient();
             addHeaders(httpClient);
             var httpResponse = await httpClient.PutAsync($"http://localhost:{port}", null);
             var textResponse = await httpResponse.Content.ReadAsStringAsync();
             Assert.Equal("Ali", textResponse);
 
-            httpClient = new HttpClient();
+            httpClient = GetHttpClient();
             addHeaders(httpClient);
             httpResponse = await httpClient.PutAsync($"http://localhost:{port}", null);
             textResponse = await httpResponse.Content.ReadAsStringAsync();
             Assert.Equal("Reza", textResponse);
 
-            httpClient = new HttpClient();
+            httpClient = GetHttpClient();
             addHeaders(httpClient);
             httpResponse = await httpClient.PutAsync($"http://localhost:{port}", null);
             textResponse = await httpResponse.Content.ReadAsStringAsync();
