@@ -61,7 +61,7 @@ namespace EasyMicroservices.Laboratory.Engine.Net
             else
                 return new HttpHandler(resourceManager);
 #else
-            throw new NotSupportedException("Only support on net6.0 or grater!");
+            return new HttpHandler(resourceManager);
 #endif
         }
     }
