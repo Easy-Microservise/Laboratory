@@ -17,17 +17,17 @@ namespace EasyMicroservice.Laboratory.Tests.Engine.Net
         public HttpClient GetHttpClient()
         {
             HttpClient httpClient = default;
-//            if (System.Environment.OSVersion.Platform != PlatformID.Unix)
-//            {
-//#if (NET452)
-//                httpClient = new HttpClient();
-//#else
-//                var handler = new WinHttpHandler();
-//                httpClient = new HttpClient(handler);
-//#endif
-//            }
-//            else
-                httpClient = new HttpClient();
+            //            if (System.Environment.OSVersion.Platform != PlatformID.Unix)
+            //            {
+            //#if (NET452)
+            //                httpClient = new HttpClient();
+            //#else
+            //                var handler = new WinHttpHandler();
+            //                httpClient = new HttpClient(handler);
+            //#endif
+            //            }
+            //            else
+            httpClient = new HttpClient();
 
 #if (!NET452 && !NET48)
             httpClient.DefaultRequestVersion = HttpVersion.Version20;
