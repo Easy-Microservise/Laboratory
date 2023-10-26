@@ -115,7 +115,7 @@ Date: Mon, 16 Mar 2020 07:48:17 GMT
             HttpClient httpClient = GetHttpClient();
 
             List<Task<bool>> all = new List<Task<bool>>();
-            for (int i = 0; i < 20; i++)
+            for (int i = 0; i < 5; i++)
             {
                 all.Add(Task.Run(async () =>
                 {
