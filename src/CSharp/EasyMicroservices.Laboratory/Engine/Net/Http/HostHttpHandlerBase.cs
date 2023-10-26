@@ -75,12 +75,14 @@ namespace EasyMicroservices.Laboratory.Engine.Net.Http
         protected virtual async Task InternalStart(int port)
         {
             var builder = WebApplication.CreateBuilder();
-            builder.WebHost.UseUrls($"http://*:{port}");
+            builder.WebHost
+                .UseUrls($"http://*:{port}")
+                .UseKestrel();
             var app = builder.Build();
             app.Use(async (context, next) =>
             {
-                await HandleHttpClient(context);
-                await next(context);
+                if (!await HandleHttpClient(context))
+                    await next(context);
             });
             await Task.WhenAny(app.RunAsync(null), Task.Delay(3000));
         }
@@ -90,7 +92,7 @@ namespace EasyMicroservices.Laboratory.Engine.Net.Http
         /// </summary>
         /// <param name="httpClient"></param>
         /// <returns></returns>
-        protected abstract Task HandleHttpClient(HttpContext httpClient);
+        protected abstract Task<bool> HandleHttpClient(HttpContext httpClient);
 
         string _lastResponseBody = "";
         /// <summary>

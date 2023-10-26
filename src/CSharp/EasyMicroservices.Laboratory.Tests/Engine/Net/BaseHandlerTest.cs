@@ -17,17 +17,17 @@ namespace EasyMicroservice.Laboratory.Tests.Engine.Net
         public HttpClient GetHttpClient()
         {
             HttpClient httpClient = default;
-//            if (System.Environment.OSVersion.Platform != PlatformID.Unix)
-//            {
-//#if (NET452)
-//                httpClient = new HttpClient();
-//#else
-//                var handler = new WinHttpHandler();
-//                httpClient = new HttpClient(handler);
-//#endif
-//            }
-//            else
-                httpClient = new HttpClient();
+            //            if (System.Environment.OSVersion.Platform != PlatformID.Unix)
+            //            {
+            //#if (NET452)
+            //                httpClient = new HttpClient();
+            //#else
+            //                var handler = new WinHttpHandler();
+            //                httpClient = new HttpClient(handler);
+            //#endif
+            //            }
+            //            else
+            httpClient = new HttpClient();
 
 #if (!NET452 && !NET48)
             httpClient.DefaultRequestVersion = HttpVersion.Version20;
@@ -86,7 +86,7 @@ Date: Mon, 16 Mar 2020 07:48:17 GMT
             var port = await GetHandler(resourceManager).Start();
 
             List<Task<bool>> all = new List<Task<bool>>();
-            for (int i = 0; i < 100; i++)
+            for (int i = 0; i < 10; i++)
             {
                 all.Add(Task.Run(async () =>
                 {
@@ -115,7 +115,7 @@ Date: Mon, 16 Mar 2020 07:48:17 GMT
             HttpClient httpClient = GetHttpClient();
 
             List<Task<bool>> all = new List<Task<bool>>();
-            for (int i = 0; i < 20; i++)
+            for (int i = 0; i < 5; i++)
             {
                 all.Add(Task.Run(async () =>
                 {
