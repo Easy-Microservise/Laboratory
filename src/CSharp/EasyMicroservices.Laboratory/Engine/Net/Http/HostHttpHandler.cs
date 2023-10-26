@@ -29,7 +29,7 @@ namespace EasyMicroservices.Laboratory.Engine.Net.Http
         /// <param name="httpClient"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        protected override async Task HandleHttpClient(HttpContext httpClient)
+        protected override async Task<bool> HandleHttpClient(HttpContext httpClient)
         {
             var reader = new StreamReader(httpClient.Request.Body);
             var requestBody = await reader.ReadToEndAsync();
@@ -63,6 +63,7 @@ namespace EasyMicroservices.Laboratory.Engine.Net.Http
 
                 await httpClient.Response.Body.WriteAsync(bytes, 0, bytes.Length);
             }
+            return true;
         }
     }
 }
