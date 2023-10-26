@@ -75,7 +75,9 @@ namespace EasyMicroservices.Laboratory.Engine.Net.Http
         protected virtual async Task InternalStart(int port)
         {
             var builder = WebApplication.CreateBuilder();
-            builder.WebHost.UseUrls($"http://*:{port}");
+            builder.WebHost
+                .UseUrls($"http://*:{port}")
+                .UseKestrel();
             var app = builder.Build();
             app.Use(async (context, next) =>
             {
