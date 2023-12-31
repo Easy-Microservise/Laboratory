@@ -40,7 +40,7 @@ namespace EasyMicroservices.Laboratory.Models
             {
                 if (space is NormalTextSpace && space is not SkipBodySpace)
                 {
-                    var index = request.IndexOf(space.Text, startFrom);
+                    var index = request.IndexOf(space.Text, startFrom, System.StringComparison.OrdinalIgnoreCase);
                     if (index < 0)
                         return false;
                     startFrom = index + space.Text.Length;
