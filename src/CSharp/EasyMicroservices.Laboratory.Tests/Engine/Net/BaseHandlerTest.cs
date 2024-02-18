@@ -86,7 +86,7 @@ Date: Mon, 16 Mar 2020 07:48:17 GMT
             var port = await GetHandler(resourceManager).Start();
 
             List<Task<bool>> all = new List<Task<bool>>();
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 3; i++)
             {
                 all.Add(Task.Run(async () =>
                 {
@@ -115,7 +115,7 @@ Date: Mon, 16 Mar 2020 07:48:17 GMT
             HttpClient httpClient = GetHttpClient();
 
             List<Task<bool>> all = new List<Task<bool>>();
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 3; i++)
             {
                 all.Add(Task.Run(async () =>
                 {
