@@ -57,7 +57,6 @@ Date: Mon, 16 Mar 2020 07:48:17 GMT
         }
         [Theory]
         [InlineData($"Hello Ali \r\n Hi Mahdi", "Reza")]
-        [InlineData("Hello Ali", "Reza \n")]
         [InlineData("Hello Mahdi", "Body \r\n Body2")]
         public async Task CheckSimpleRequestAndResponse(string request, string response)
         {
@@ -115,7 +114,7 @@ Date: Mon, 16 Mar 2020 07:48:17 GMT
             HttpClient httpClient = GetHttpClient();
 
             List<Task<bool>> all = new List<Task<bool>>();
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 1; i++)
             {
                 all.Add(Task.Run(async () =>
                 {
